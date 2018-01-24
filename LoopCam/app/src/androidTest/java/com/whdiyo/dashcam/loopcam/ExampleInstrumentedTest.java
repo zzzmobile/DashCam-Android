@@ -1,4 +1,4 @@
-package dashcam.whdiyo.com.loopcam;
+package com.whdiyo.dashcam.loopcam;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

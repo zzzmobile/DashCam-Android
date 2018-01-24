@@ -1,4 +1,4 @@
-package dashcam.whdiyo.com.loopcam;
+package com.whdiyo.dashcam.loopcam;
 
 import org.junit.Test;
 

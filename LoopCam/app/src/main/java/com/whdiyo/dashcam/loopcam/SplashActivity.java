@@ -1,4 +1,4 @@
-package dashcam.whdiyo.com.loopcam;
+package com.whdiyo.dashcam.loopcam;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
