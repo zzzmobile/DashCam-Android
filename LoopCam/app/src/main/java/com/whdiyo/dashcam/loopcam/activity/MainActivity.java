@@ -1,11 +1,19 @@
 package com.whdiyo.dashcam.loopcam.activity;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.StatFs;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,7 +28,7 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.InterstitialAd;
-import com.google.android.gms.ads.MobileAds;
+import com.otaliastudios.cameraview.Audio;
 import com.otaliastudios.cameraview.CameraListener;
 import com.otaliastudios.cameraview.CameraLogger;
 import com.otaliastudios.cameraview.CameraOptions;
@@ -30,13 +38,11 @@ import com.sasank.roundedhorizontalprogress.RoundedHorizontalProgressBar;
 import com.whdiyo.dashcam.loopcam.LoopCamApplication;
 import com.whdiyo.dashcam.loopcam.R;
 import com.whdiyo.dashcam.loopcam.util.Const;
+import com.whdiyo.dashcam.loopcam.util.GPSTracker;
 import com.whdiyo.dashcam.loopcam.util.Utils;
 
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -52,6 +58,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     RoundedHorizontalProgressBar progressBar = null;
 
     InterstitialAd interstitialAd;
+    GPSTracker gpsTracker = null;
+    double currentLatitude = 0.0;
+    double currentLongitude = 0.0;
+    float currentSpeed = 0.0f;
+    float currentBearing = 0.0f;
+    String currentFileName = "";
 
     CountDownTimer recordTimer = null;
     File videoFile = null;
@@ -63,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isRecording = false;
     private int recordCount = 0;
     private VideoQuality videoSetting = VideoQuality.MAX_720P;
-    private float speed = 0.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +109,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AdRequest adRequest1 = new AdRequest.Builder().build();
         interstitialAd.loadAd(adRequest1);
 
+        gpsTracker = new GPSTracker(this);
+
         btnMenu = findViewById(R.id.btn_menu);
         btnRecord = findViewById(R.id.btn_record);
         btnSave = findViewById(R.id.btn_save);
@@ -124,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onVideoTaken(File video) {
-
+                super.onVideoTaken(video);
             }
         });
 
@@ -144,14 +157,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setVideoSetting();
         calcFreeSpace();
         refreshStorageBar();
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            //do your check here
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        }
+
+        int PERMISSION_ALL = 1;
+        String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA};
+
+        if(!hasPermissions(this, PERMISSIONS)){
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+        }
+
+        updateLocationInfo();
+        updateTrafficInfo();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         camera.start();
+        updateLocationInfo();
+        updateTrafficInfo();
         setLoopingTime();
         setVideoSetting();
+        calcFreeSpace();
+        refreshStorageBar();
     }
 
     @Override
@@ -166,16 +199,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         camera.destroy();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        boolean valid = true;
-        for (int grantResult : grantResults) {
-            valid = valid && grantResult == PackageManager.PERMISSION_GRANTED;
+    private boolean hasPermissions(Context context, String...permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
         }
-        if (valid && !camera.isStarted()) {
-            camera.start();
-        }
+        return true;
     }
 
     @Override
@@ -204,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private String makeAppDirectory() {
-        File dataDir = getFilesDir();
+        File dataDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         String appPath = dataDir.toString() + "/video/";
         File appDir = new File(appPath);
         if (!appDir.exists())
@@ -214,27 +246,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startVideoRecord() {
+        updateLocationInfo();
         String path = makeAppDirectory();
         Calendar calendar = Calendar.getInstance();
         String sYear = String.format(Locale.US, "%02d", calendar.get(Calendar.YEAR));
-        String sMonth = String.format(Locale.US, "%02d", calendar.get(Calendar.MONTH));
+        String sMonth = String.format(Locale.US, "%02d", calendar.get(Calendar.MONTH) + 1);
         String sDate = String.format(Locale.US, "%02d", calendar.get(Calendar.DATE));
         String sHour = String.format(Locale.US, "%02d", calendar.get(Calendar.HOUR_OF_DAY));
         String sMinute = String.format(Locale.US, "%02d", calendar.get(Calendar.MINUTE));
         String sSecond = String.format(Locale.US, "%02d", calendar.get(Calendar.SECOND));
 
-        String fileName = sYear + "-" + sMonth + "-" + sDate + " " + sHour + ":" + sMinute + ":" + sSecond + ".mp4";
-        String filePath = path + "/" + fileName;
+        currentFileName = sYear + sMonth + sDate + sHour + sMinute + sSecond + ".mp4";
+        String filePath = path + "/" + currentFileName;
 
         videoFile = new File(filePath);
         camera.setPlaySounds(!isMute);
+        if (isMute)
+            camera.setAudio(Audio.OFF);
+        else
+            camera.setAudio(Audio.ON);
 
         setVideoSetting();
         camera.startCapturingVideo(videoFile, recordCount * 1000);
+        saveStartLocationInfo(currentFileName);
+        calcFreeSpace();
+        refreshStorageBar();
     }
 
     private void stopVideoRecord() {
+        updateLocationInfo();
+        saveEndLocationInfo();
         camera.stopCapturingVideo();
+    }
+
+    private void saveStartLocationInfo(String filename) {
+        SharedPreferences pref = getSharedPreferences("VideoList", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putFloat(filename + "_slat", (float)currentLatitude);
+        editor.putFloat(filename + "_slon", (float)currentLongitude);
+        editor.apply();
+    }
+
+    private void saveEndLocationInfo() {
+        SharedPreferences pref = getSharedPreferences("VideoList", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putFloat(currentFileName + "_elat", (float)currentLatitude);
+        editor.putFloat(currentFileName + "_elon", (float)currentLongitude);
+        editor.apply();
     }
 
     private void onMenu() {
@@ -330,6 +388,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         float freeSize = freeDiskSize / 1024.0f / 1024.0f / 1024.0f;
         String strFreeSize = String.format(Locale.US, "Available: %.1fGB", freeSize);
-        txtStorageUsage.setText(strFreeSize);
+
+        LoopCamApplication application = (LoopCamApplication)LoopCamApplication.getApplication();
+        freeSize = freeSize * 1024;
+        int minutes = 0;
+        if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_720P) {
+            minutes = (int)(freeSize / 75);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_LOW) {
+            minutes = (int)(freeSize / 2.5);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_HIGH ||
+                application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_2160P) {
+            minutes = (int)(freeSize / 112);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_QVGA) {
+            minutes = (int)(freeSize / 6);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_480P) {
+            minutes = (int)(freeSize / 22.5);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_1080P) {
+            minutes = (int)(freeSize / 80);
+        }
+
+        String strMinute = String.format(Locale.US, " (%d minutes)", minutes);
+        txtStorageUsage.setText(strFreeSize + strMinute);
+    }
+
+    private void updateLocationInfo() {
+        if (gpsTracker.canGetLocation()) {
+            currentLatitude = gpsTracker.getLatitude();
+            currentLongitude = gpsTracker.getLongitude();
+            currentSpeed = gpsTracker.getSpeed();
+            currentBearing = gpsTracker.getBearing();
+        } else {
+            gpsTracker.showSettingsAlert();
+        }
+    }
+
+    private void updateTrafficInfo() {
+        float speed = currentSpeed / 3600.0f;
+        String strUnit = " MPH";
+        LoopCamApplication application = (LoopCamApplication)LoopCamApplication.getApplication();
+        if (application.appSetting.getSpeedUnit() == Const.KILOMETER_PER_HOUR) {
+            speed = speed / 1000.0f;
+            strUnit = " KPH";
+        }
+        String value = String.format(Locale.US, "%.1f", speed);
+        txtSpeed.setText(value + strUnit);
     }
 }

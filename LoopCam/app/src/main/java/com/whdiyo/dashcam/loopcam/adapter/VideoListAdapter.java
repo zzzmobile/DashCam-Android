@@ -19,10 +19,8 @@ import java.util.ArrayList;
  */
 
 public class VideoListAdapter extends BaseAdapter {
-
     private Context context;
     private ArrayList<VideoListItem> videoList;
-
     private LayoutInflater inflater=null;
 
     public VideoListAdapter(VideoListActivity activity, ArrayList<VideoListItem> listItemList) {
@@ -76,5 +74,4 @@ public class VideoListAdapter extends BaseAdapter {
         TextView txtVideoDuration;
         TextView txtVideoSize;
     }
-
 }

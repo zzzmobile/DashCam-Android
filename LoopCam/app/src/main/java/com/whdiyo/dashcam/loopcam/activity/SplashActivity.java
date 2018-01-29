@@ -153,5 +153,8 @@ public class SplashActivity extends AppCompatActivity implements View.OnClickLis
     public void onRewardedVideoAdFailedToLoad(int i) {
         Toast.makeText(this, "Google Reward Video load failed.", Toast.LENGTH_SHORT).show();
         bFailed = true;
+
+        if (bStart)
+            startMainActivity();
     }
 }

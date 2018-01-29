@@ -13,6 +13,8 @@
     <string name="confirm">Confirm</string>
     <string name="yes">YES</string>
     <string name="no">NO</string>
+    <string name="delete">Delete</string>
+    <string name="rename">Rename</string>
 
     <string name="menu">Menu</string>
     <string name="settings">Settings</string>
@@ -32,5 +34,11 @@
 
     <string name="delete_all">Delete All Videos</string>
     <string name="delete_sentence">Are you sure you want to delete all videos?</string>
+
+    <string name="no_video">There is no video data</string>
+    <string name="rename_video">Rename Video</string>
+    <string name="hint_rename_video">please input new video file name</string>
+    <string name="delete_file">Delete File</string>
+    <string name="delete_file_sentence">Are you sure you want to delete this video?</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.whdiyo.dashcam.loopcam.activity;
 
 import android.content.DialogInterface;
+import android.os.Environment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -18,6 +20,8 @@ import com.whdiyo.dashcam.loopcam.R;
 import com.whdiyo.dashcam.loopcam.adapter.SettingListAdapter;
 import com.whdiyo.dashcam.loopcam.dialog.SelectAutoRecordDialog;
 import com.whdiyo.dashcam.loopcam.dialog.SelectLoopTimeDialog;
+
+import java.io.File;
 
 public class SettingsActivity extends AppCompatActivity {
     ImageButton btnBack = null;
@@ -133,7 +137,7 @@ public class SettingsActivity extends AppCompatActivity {
         } else if (position == SECTION_LOOP_TIME) {
             dialogLoopTime.show();
         } else if (position == SECTION_AUTO_RECORD) {
-            dialogAutoRecord.show();
+//            dialogAutoRecord.show();  // coming soon
         } else if (position == SECTION_VIDEO_SETTING) {
             qualityBuilder.show();
         } else if (position == SECTION_DELETE_ALL) {
@@ -160,6 +164,19 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void deleteAllVideos() {
+        File dataDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        String appPath = dataDir.toString() + "/video/";
+        File videoDirectory = new File(appPath);
+        File[] videoFiles = videoDirectory.listFiles();
 
+        if (videoFiles == null) {
+            return;
+        }
+
+        for (File file : videoFiles) {
+            file.delete();
+        }
+
+        Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
     }
 }
