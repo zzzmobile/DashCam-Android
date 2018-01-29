@@ -1,3 +1,36 @@
 <resources>
     <string name="app_name">LoopCam</string>
+    <string name="app_title">Looping DashCam</string>
+    <string name="beta_mark">(Beta)</string>
+    <string name="app_notice">Obey all traffic laws when using this application. For your safety, do not operate this app while driving. Please make your adjustments while parked.</string>
+    <string name="banner_ad_unit_id">ca-app-pub-6714239015427657/9815626562</string>
+    <string name="banner_ad_unit_id1">ca-app-pub-6714239015427657/9122272249</string>
+    <string name="interstitial_ad_unit_id">ca-app-pub-6714239015427657/2958396565</string>
+
+    <string name="okay">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="set">Set</string>
+    <string name="confirm">Confirm</string>
+    <string name="yes">YES</string>
+    <string name="no">NO</string>
+
+    <string name="menu">Menu</string>
+    <string name="settings">Settings</string>
+    <string name="saved_videos">Saved Videos</string>
+    <string name="log_history">Log/History (coming soon)</string>
+
+    <string name="unit_speed">Unit of Speed</string>
+    <string name="mph">Meter Per Hour(MPH)</string>
+    <string name="kph">Kilometer Per Hour(KPH)</string>
+    <string name="loop_time">Loop Time</string>
+    <string name="hint_loop_time">Please input only numbers(1~3600)</string>
+    <string name="auto_record">Auto Record</string>
+    <string name="video_quality">Video Quality</string>
+    <string name="high">High</string>
+    <string name="medium">Medium</string>
+    <string name="low">Low</string>
+
+    <string name="delete_all">Delete All Videos</string>
+    <string name="delete_sentence">Are you sure you want to delete all videos?</string>
+
 </resources>
