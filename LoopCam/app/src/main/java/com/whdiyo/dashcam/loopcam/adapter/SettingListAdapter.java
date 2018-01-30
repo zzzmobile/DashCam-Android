@@ -88,18 +88,10 @@ public class SettingListAdapter extends BaseAdapter {
             {
                 if (setting.getVideoSetting() == Const.VIDEO_SETTING_LOW)
                     holder.txtItemValue.setText("Low");
+                else if (setting.getVideoSetting() == Const.VIDEO_SETTING_MEDIUM)
+                    holder.txtItemValue.setText("Medium");
                 else if (setting.getVideoSetting() == Const.VIDEO_SETTING_HIGH)
                     holder.txtItemValue.setText("High");
-                else if (setting.getVideoSetting() == Const.VIDEO_SETTING_QVGA)
-                    holder.txtItemValue.setText("QVGA");
-                else if (setting.getVideoSetting() == Const.VIDEO_SETTING_480P)
-                    holder.txtItemValue.setText("480p");
-                else if (setting.getVideoSetting() == Const.VIDEO_SETTING_720P)
-                    holder.txtItemValue.setText("720p");
-                else if (setting.getVideoSetting() == Const.VIDEO_SETTING_1080P)
-                    holder.txtItemValue.setText("1080p");
-                else
-                    holder.txtItemValue.setText("2160p");
             }
                 break;
         }

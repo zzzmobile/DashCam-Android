@@ -37,9 +37,9 @@ public class LoopCamApplication extends Application {
 
         if (pref.contains("key_speed_unit")) {
             Integer speedUnit = pref.getInt("key_speed_unit", Const.METER_PER_HOUR);
-            Integer loopTime = pref.getInt("key_loop_time", 60);
+            Integer loopTime = pref.getInt("key_loop_time", 600);
             Boolean autoRecord = pref.getBoolean("key_auto_record", false);
-            Integer videoSetting = pref.getInt("key_video_setting", Const.VIDEO_SETTING_720P);
+            Integer videoSetting = pref.getInt("key_video_setting", Const.VIDEO_SETTING_MEDIUM);
 
             appSetting.setSpeedUnit(speedUnit);
             appSetting.setLoopSeconds(loopTime);
@@ -54,9 +54,9 @@ public class LoopCamApplication extends Application {
         SharedPreferences pref = getApplicationContext().getSharedPreferences("LoopCam", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         editor.putInt("key_speed_unit", Const.METER_PER_HOUR);
-        editor.putInt("key_loop_time", 60);
+        editor.putInt("key_loop_time", 600);
         editor.putBoolean("key_auto_record", false);
-        editor.putInt("key_video_setting", Const.VIDEO_SETTING_720P);
+        editor.putInt("key_video_setting", Const.VIDEO_SETTING_MEDIUM);
         editor.apply();
     }
 

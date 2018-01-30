@@ -51,7 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
     AlertDialog.Builder confirmBuilder = null;
 
     CharSequence units[] = new CharSequence[] { "Meter of Hour(MPH)", "Kilometer of Hour(KPH)" };
-    CharSequence qualities[] = new CharSequence[] { "Low", "High", "QVGA", "480p", "720p", "1080p", "2160p" };
+    CharSequence qualities[] = new CharSequence[] { "Low", "Medium", "High" };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

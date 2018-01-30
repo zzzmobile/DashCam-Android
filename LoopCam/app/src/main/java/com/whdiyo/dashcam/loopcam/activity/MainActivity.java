@@ -1,7 +1,9 @@
 package com.whdiyo.dashcam.loopcam.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -12,6 +14,7 @@ import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.StatFs;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBar;
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     InterstitialAd interstitialAd;
     GPSTracker gpsTracker = null;
+    AlertDialog gpsSettingDialog = null;
     double currentLatitude = 0.0;
     double currentLongitude = 0.0;
     float currentSpeed = 0.0f;
@@ -110,10 +114,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         interstitialAd.loadAd(adRequest1);
 
         gpsTracker = new GPSTracker(this);
+        gpsSettingDialog = new AlertDialog.Builder(this)
+                .setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                }).create();
+        gpsSettingDialog.setTitle("GPS unavailable");
+        gpsSettingDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
 
         btnMenu = findViewById(R.id.btn_menu);
         btnRecord = findViewById(R.id.btn_record);
         btnSave = findViewById(R.id.btn_save);
+        btnSave.setEnabled(false);
         btnSound = findViewById(R.id.btn_mute);
         btnRotate = findViewById(R.id.btn_rotate);
         btnMenu.setOnClickListener(this);
@@ -246,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void startVideoRecord() {
+        btnSave.setEnabled(true);
         updateLocationInfo();
         String path = makeAppDirectory();
         Calendar calendar = Calendar.getInstance();
@@ -274,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void stopVideoRecord() {
+        btnSave.setEnabled(false);
         updateLocationInfo();
         saveEndLocationInfo();
         camera.stopCapturingVideo();
@@ -361,18 +382,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int vs = application.appSetting.getVideoSetting();
         if (vs == Const.VIDEO_SETTING_LOW)
             videoSetting = VideoQuality.LOWEST;
+        else if (vs == Const.VIDEO_SETTING_MEDIUM)
+            videoSetting = VideoQuality.MAX_720P;
         else if (vs == Const.VIDEO_SETTING_HIGH)
             videoSetting = VideoQuality.HIGHEST;
-        else if (vs == Const.VIDEO_SETTING_QVGA)
-            videoSetting = VideoQuality.MAX_QVGA;
-        else if (vs == Const.VIDEO_SETTING_480P)
-            videoSetting = VideoQuality.MAX_480P;
-        else if (vs == Const.VIDEO_SETTING_720P)
-            videoSetting = VideoQuality.MAX_720P;
-        else if (vs == Const.VIDEO_SETTING_1080P)
-            videoSetting = VideoQuality.MAX_1080P;
-        else if (vs == Const.VIDEO_SETTING_2160P)
-            videoSetting = VideoQuality.MAX_2160P;
         camera.setVideoQuality(videoSetting);
     }
 
@@ -392,19 +405,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LoopCamApplication application = (LoopCamApplication)LoopCamApplication.getApplication();
         freeSize = freeSize * 1024;
         int minutes = 0;
-        if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_720P) {
+        if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_LOW) {
+            minutes = (int) (freeSize / 2.5);
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_MEDIUM) {
             minutes = (int)(freeSize / 75);
-        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_LOW) {
-            minutes = (int)(freeSize / 2.5);
-        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_HIGH ||
-                application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_2160P) {
+        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_HIGH ) {
             minutes = (int)(freeSize / 112);
-        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_QVGA) {
-            minutes = (int)(freeSize / 6);
-        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_480P) {
-            minutes = (int)(freeSize / 22.5);
-        } else if (application.appSetting.getVideoSetting() == Const.VIDEO_SETTING_1080P) {
-            minutes = (int)(freeSize / 80);
         }
 
         String strMinute = String.format(Locale.US, " (%d minutes)", minutes);
@@ -418,12 +424,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             currentSpeed = gpsTracker.getSpeed();
             currentBearing = gpsTracker.getBearing();
         } else {
-            gpsTracker.showSettingsAlert();
+            if (!gpsSettingDialog.isShowing())
+                gpsSettingDialog.show();
         }
     }
 
     private void updateTrafficInfo() {
-        float speed = currentSpeed / 3600.0f;
+        float speed = currentSpeed * 3600.0f;
         String strUnit = " MPH";
         LoopCamApplication application = (LoopCamApplication)LoopCamApplication.getApplication();
         if (application.appSetting.getSpeedUnit() == Const.KILOMETER_PER_HOUR) {

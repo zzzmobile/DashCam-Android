@@ -48,37 +48,39 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp">
 
-            <FrameLayout
-                android:layout_width="75dp"
+            <TextView
+                android:id="@+id/txt_record_counter"
+                android:layout_width="wrap_content"
                 android:layout_height="30dp"
                 android:layout_marginStart="15dp"
                 android:layout_gravity="start|center_vertical"
-                android:background="@drawable/label_bg">
-                <TextView
-                    android:id="@+id/txt_record_counter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textColor="@color/white_color"
-                    android:textSize="16sp"
-                    android:text="00:00"/>
-            </FrameLayout>
+                android:minWidth="75dp"
+                android:paddingTop="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:textColor="@color/white_color"
+                android:textAlignment="center"
+                android:text="00:00"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:background="@drawable/label_bg_drawable"/>
 
-            <FrameLayout
-                android:layout_width="75dp"
+            <TextView
+                android:id="@+id/txt_speed"
+                android:layout_width="wrap_content"
                 android:layout_height="30dp"
                 android:layout_marginEnd="15dp"
                 android:layout_gravity="end|center_vertical"
-                android:background="@drawable/label_bg">
-                <TextView
-                    android:id="@+id/txt_speed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textColor="@color/white_color"
-                    android:textSize="16sp"
-                    android:text="0.0 MPH"/>
-            </FrameLayout>
+                android:minWidth="75dp"
+                android:paddingTop="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:textColor="@color/white_color"
+                android:textAlignment="center"
+                android:text="0.0 MPH"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:background="@drawable/label_bg_drawable"/>
 
         </FrameLayout>
 
